@@ -1,0 +1,108 @@
+---
+title: "agol-reports-05-2026"
+format: html
+---
+
+See report metadata: [link](https://doc.arcgis.com/en/arcgis-online/reference/report-fields.htm#ESRI_SECTION1_41ABB66B8185459DBE9252C6F86836E4)
+
+```{r}
+#| output: false
+#| quiet: true
+#| code-fold: true
+#| code-summary: "Show the code"
+
+# Set up 
+library(tidyverse)
+library(janitor)
+library(here)
+library(kableExtra)
+```
+
+```{r}
+#| output: false
+#| quiet: true
+#| code-fold: true
+#| code-summary: "Show the code"
+
+# Read in report files
+# items 
+items_raw <- read_csv(here("arcgis-reporting", "data", "OrganizationItems_2026-05-21.csv"))
+```
+
+```{r}
+# Clean data 
+items_clean <- items_raw |> 
+  # clean names
+  janitor::clean_names(case = "upper_camel") 
+```
+
+```{r}
+#| quiet: true
+#| code-fold: true
+#| code-summary: "Show the code"
+
+# Number of items 
+cat("Number of total items: ", nrow(items_clean), "\n")
+
+# How many members own these items
+cat("Total users that own these items: ", length(unique(items_clean$Owner)))
+```
+
+## Items by Owner
+```{r}
+#| quiet: true
+#| code-fold: true
+#| code-summary: "Show the code"
+
+# Determine how many items each user owns
+item_owners <- items_clean |> 
+  group_by(Owner) |> 
+  summarise(TotalItems = n()) |> 
+  arrange(-TotalItems)
+
+kable(item_owners) |> 
+  kable_styling(bootstrap_options = c("striped", "hover"), full_width = F)
+
+```
+
+## Top 20 Largest Files
+In megabytes 
+
+```{r}
+#| quiet: true
+#| code-fold: true
+#| code-summary: "Show the code"
+
+# Items that take up the most storage
+files_storage <- items_clean |> 
+  select(Title, Owner, FileStorageSize) |> 
+  arrange(-FileStorageSize) |> 
+  # just top 20 items 
+  slice_head(n = 20)
+
+kable(files_storage) |> 
+  kable_styling(bootstrap_options = c("striped", "hover"), full_width = T, font_size = 9)
+  
+```
+
+
+## Top 20 Largest Features
+In megabytes 
+
+```{r}
+#| quiet: true
+#| code-fold: true
+#| code-summary: "Show the code"
+
+
+# Items that take up the most storage
+features_storage <- items_clean |> 
+  select(Title, Owner, FeatureStorageSize) |> 
+  arrange(-FeatureStorageSize) |> 
+  # just top 20 items 
+  slice_head(n = 20)
+
+kable(features_storage) |> 
+  kable_styling(bootstrap_options = c("striped", "hover"), full_width = T)
+  
+```
